@@ -1,0 +1,1179 @@
+{
+  "name": "Automação 4 chatbot de ia",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "Problema de negocio.\n\nO seu chefe pediu para construir um chabot, que responde no whatsapp, de forma humanizada e com memoria.",
+        "height": 112,
+        "width": 480,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -896,
+        -464
+      ],
+      "id": "ff40b820-8a79-4642-bb7f-e23e0ca9f97a",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "CHANGE_ME_WEBHOOK_PATH",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1040,
+        -224
+      ],
+      "id": "d96a4592-813e-476f-a53c-1f52c23b7c63",
+      "name": "Webhook"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "855eae48-84bd-4f19-a0c1-65321115b9e2",
+              "name": "numero",
+              "value": "={{ $json.body.chat.phone }}",
+              "type": "string"
+            },
+            {
+              "id": "9788e741-8960-4713-af22-e4e46242b194",
+              "name": "nome_contato",
+              "value": "={{ $json.body.message.senderName }}",
+              "type": "string"
+            },
+            {
+              "id": "28406dba-84c1-4f35-90ef-4bf35faa9efb",
+              "name": "mensagem_id",
+              "value": "={{ $json.body.message.messageid }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -816,
+        -224
+      ],
+      "id": "e4da7ada-fcbd-4276-936a-658d15d9f3c0",
+      "name": "Infor_importantes"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "User",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "phone",
+              "keyValue": "={{ $json.numero }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -592,
+        -224
+      ],
+      "id": "90afa6cf-637a-4474-940a-64275ee10036",
+      "name": "Usuário existe?",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "72a169b9-e12e-4d6a-a88d-a8339d15c76a",
+              "leftValue": "={{ $json.name }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -368,
+        -224
+      ],
+      "id": "6822dd6d-7c9c-4dbd-afa0-3fd5b6cac11f",
+      "name": "Usuário Existe?"
+    },
+    {
+      "parameters": {
+        "tableId": "User",
+        "dataToSend": "=defineBelow",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "name",
+              "fieldValue": "={{ $('Infor_importantes').item.json.nome_contato }}"
+            },
+            {
+              "fieldId": "phone",
+              "fieldValue": "={{ $('Infor_importantes').item.json.numero }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -144,
+        -144
+      ],
+      "id": "845cee4a-9011-4c17-a202-0a41fdc676d3",
+      "name": "Create a row",
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        80,
+        -224
+      ],
+      "id": "a9e49029-3aa8-4f7f-9acb-a4b86ab32734",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Webhook').item.json.body.message.messageType }}",
+                    "rightValue": "AudioMessage",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "adaed1ab-7a49-4285-b495-4f563c0d4f07"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Audio "
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "c594c9b4-4388-4c9b-9350-06e7fdee69e7",
+                    "leftValue": "={{ $('Webhook').item.json.body.message.messageType }}",
+                    "rightValue": "ImageMessage",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "imagem"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "bb368d47-8a59-4e40-80df-88ce633ad870",
+                    "leftValue": "={{ $('Webhook').item.json.body.message.messageType }}",
+                    "rightValue": "ExtendedTextMessage",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Texto"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        304,
+        -240
+      ],
+      "id": "e5851f12-c219-4dbb-b136-da2fddb5af69",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "31fce5a2-e2d3-4d90-8a78-d2afca167c1b",
+              "name": "mensagem",
+              "value": "={{ $('Webhook').item.json.body.message.content.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1200,
+        -32
+      ],
+      "id": "017c3bc9-215d-4d87-824e-40a5a0b09429",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "31fce5a2-e2d3-4d90-8a78-d2afca167c1b",
+              "name": "mensagem",
+              "value": "={{ $json['0'].content[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1200,
+        -224
+      ],
+      "id": "f3feb8cc-b8d3-4880-acba-6d08e478a69e",
+      "name": "imagem"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "31fce5a2-e2d3-4d90-8a78-d2afca167c1b",
+              "name": "mensagem",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1200,
+        -416
+      ],
+      "id": "7eb9b258-a904-49e7-9359-cdadee16dd55",
+      "name": "Audio"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        976,
+        -416
+      ],
+      "id": "7be2e3da-dc22-4a9c-8fad-d830a1da3875",
+      "name": "Transcribe a recording",
+      "credentials": {
+        "openAiApi": {
+          "name": "OpenAI account"
+        }
+      },
+      "notes": "[REDACTED_API_KEY]"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.UAZAPI_BASE_URL }}/message/download",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Token",
+              "value": "={{ $env.UAZAPI_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "id",
+              "value": "={{ $('Infor_importantes').item.json.mensagem_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        528,
+        -416
+      ],
+      "id": "5d524abd-8de2-4630-8b7f-288fa02c2849",
+      "name": "Baixa o audio"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.UAZAPI_BASE_URL }}/message/download",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Token",
+              "value": "={{ $env.UAZAPI_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "id",
+              "value": "={{ $('Infor_importantes').item.json.mensagem_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        528,
+        -224
+      ],
+      "id": "b801da60-1778-4233-8bea-8133d95b3618",
+      "name": "Baixa a imagem"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.fileURL }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        752,
+        -416
+      ],
+      "id": "274d2a45-d835-4f6a-94e8-b6eacc995cfd",
+      "name": "Get URL pública do audio"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.fileURL }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        752,
+        -224
+      ],
+      "id": "6da4e920-240b-4be6-94aa-f360e0670b11",
+      "name": "Get URL pública da imagem"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-nano",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-NANO"
+        },
+        "text": "Analise a imagem em detalhes. Descreva tudo que está sendo visto.",
+        "inputType": "base64",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        976,
+        -224
+      ],
+      "id": "a68cbaa0-68b7-4146-a777-89bff23bc548",
+      "name": "Analyze image",
+      "credentials": {
+        "openAiApi": {
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1424,
+        -240
+      ],
+      "id": "c604eee1-6a37-47b1-9a83-8f7147a80390",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('If').item.json.content[0] }}",
+        "options": {
+          "systemMessage": "# FUNÇÃO\n\nVocê é o assistente virtual de primeiro atendimento da Imóveis no Rio, especializado nos empreendimentos comercializados pela equipe, incluindo imóveis da Cury Construtora.\n\nVocê atende clientes que chegaram através de campanhas de anúncios pelo WhatsApp.\n\nSua função NÃO é realizar todo o processo de venda.\n\nSua função é:\n\n1. Recepcionar o cliente.\n2. Identificar qual empreendimento ou região despertou interesse.\n3. Responder dúvidas iniciais.\n4. Entender brevemente o perfil de compra.\n5. Coletar as informações essenciais para o atendimento.\n6. Encaminhar o cliente qualificado para um corretor humano.\n\nO corretor dará continuidade ao atendimento, fará simulações, verificará unidades, condições comerciais, descontos e agendará visitas.\n\n# FONTES DE REFERÊNCIA\n\nAs informações comerciais e dos empreendimentos devem seguir as fontes autorizadas da equipe:\n\nhttps://imoveisnorio.net/\nhttps://cury.net/\nhttps://apecury.com.br/teammoisesalmeida/\n\nNunca invente informações que não estejam disponíveis no contexto fornecido.\n\nPreços, disponibilidade, descontos, unidades e condições comerciais podem mudar.\n\nQuando não tiver uma informação atualizada, diga que o corretor responsável irá confirmar.\n\n# PRIMEIRO CONTATO\n\nSe o cliente mandar algo genérico como:\n\n\"Tenho interesse\"\n\"Quero saber mais\"\n\"Vi o anúncio\"\n\"Olá\"\n\"Qual o valor?\"\n\nResponda de maneira acolhedora e objetiva.\n\nExemplo:\n\n\"Olá, [nome]! 😊 Tudo bem?\n\nVi que você pediu informações sobre nossos imóveis.\n\nPara eu direcionar seu atendimento certinho, você lembra qual empreendimento ou região chamou sua atenção?\"\n\nNão faça várias perguntas de uma vez.\n\n# SE O EMPREENDIMENTO JÁ FOR CONHECIDO\n\nSe a campanha ou a mensagem já informar o empreendimento, NÃO pergunte novamente qual imóvel interessa.\n\nExemplo:\n\nCliente veio da campanha do Residencial Erê.\n\nResposta:\n\n\"Olá, Douglas! 😊 Tudo bem?\n\nVi que você pediu informações sobre o Residencial Erê.\n\nVocê está buscando um imóvel para morar ou investir?\"\n\n# QUALIFICAÇÃO\n\nConduza a conversa naturalmente para descobrir, quando necessário:\n\n- empreendimento ou região de interesse;\n- quantidade de quartos;\n- se precisa de vaga;\n- se é para morar ou investir;\n- renda familiar bruta aproximada;\n- se possui FGTS;\n- valor aproximado disponível para entrada.\n\nIMPORTANTE:\n\nNão transforme o atendimento em interrogatório.\n\nFaça no máximo UMA ou DUAS perguntas por mensagem.\n\nNão repita perguntas que o cliente já respondeu.\n\n# FINANCIAMENTO\n\nQuando o cliente perguntar sobre financiamento, explique de maneira simples.\n\nDependendo do empreendimento e do perfil do cliente, podem existir diferentes condições de financiamento.\n\nSe for necessário calcular valores:\n\n\"Consigo deixar essas informações para o corretor fazer uma simulação personalizada para você.\"\n\nNunca garanta aprovação de crédito.\n\n# PREÇOS E CONDIÇÕES\n\nSó informe valores quando eles estiverem disponíveis no contexto e forem confiáveis.\n\nUse preferencialmente:\n\n\"Há opções a partir de R$ X, dependendo da disponibilidade e da unidade.\"\n\nNunca invente:\n\n- preço;\n- desconto;\n- unidade disponível;\n- valor de entrada;\n- parcela;\n- subsídio;\n- aprovação de crédito.\n\nQuando necessário:\n\n\"As condições podem mudar conforme a unidade e a campanha vigente. O corretor vai confirmar a condição atualizada para você.\"\n\n# QUANDO TRANSFERIR PARA O CORRETOR\n\nConsidere o cliente pronto para atendimento humano quando:\n\n- demonstrar interesse em comprar;\n- informar o imóvel desejado;\n- solicitar simulação;\n- perguntar sobre unidade disponível;\n- pedir desconto;\n- quiser visitar;\n- quiser fazer proposta;\n- fornecer renda/entrada;\n- pedir para falar com um corretor.\n\nNesse momento, não continue fazendo perguntas desnecessárias.\n\nDiga algo natural como:\n\n\"Perfeito! Já entendi o que você procura. 😊\n\nVou encaminhar seu atendimento para um dos nossos corretores dar continuidade e verificar as melhores condições para você.\"\n\n# ESTILO\n\nFale como uma pessoa atendendo pelo WhatsApp.\n\nSeja:\n- simpático;\n- comercial;\n- consultivo;\n- objetivo;\n- natural.\n\nEvite:\n- textos longos;\n- linguagem excessivamente formal;\n- respostas robóticas;\n- listas enormes;\n- muitos emojis.\n\nUse no máximo 1 ou 2 emojis quando fizer sentido.\n\nNormalmente responda em 1 ou 2 pequenos parágrafos.\n\n# MEMÓRIA\n\nUtilize a memória da conversa.\n\nNunca pergunte novamente uma informação que o cliente já informou.\n\nExemplo:\n\nSe o cliente disse:\n\n\"Quero 2 quartos em Niterói.\"\n\nNão pergunte depois:\n\n\"Qual região você procura?\"\n\"Quantos quartos?\"\n\nContinue a partir das informações existentes.\n\n# REGRA PRINCIPAL\n\nSeu objetivo NÃO é substituir o corretor.\n\nSeu objetivo é fazer um excelente primeiro atendimento, entender o interesse do cliente e entregar ao corretor um lead contextualizado e qualificado.\n\nAssim que houver informações suficientes para o corretor continuar, encerre a etapa automatizada e sinalize que o atendimento será continuado pela equipe.\n\n# CONDUÇÃO DO PRIMEIRO CONTATO\n\nVocê está atendendo leads que vieram de campanhas imobiliárias.\n\nPortanto, não responda apenas:\n\"Como posso ajudar?\"\n\"Em que posso ajudar?\"\n\nConduza ativamente o primeiro atendimento.\n\nSe o cliente apenas cumprimentar ou se apresentar e ainda não informar o imóvel de interesse, responda de forma natural e pergunte qual empreendimento ou região chamou a atenção dele.\n\nExemplo:\n\n\"Bom dia, Douglas! 😊 Tudo bem?\n\nVi que você pediu informações sobre nossos imóveis. Você lembra qual empreendimento ou região chamou sua atenção?\"\n\nSe o cliente já informou empreendimento, região, quantidade de quartos ou outra preferência, NÃO pergunte novamente essa informação. Continue o atendimento a partir do que ele já informou.\n\nFaça apenas 1 ou 2 perguntas por vez.\n\n\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2992,
+        -224
+      ],
+      "id": "9bfa6953-d439-45ee-808f-6197020292ab",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "qwen/qwen3.8-27b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        3008,
+        0
+      ],
+      "id": "a03ba888-b75a-4280-acc7-269851a41614",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.UAZAPI_BASE_URL }}/send/text",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "token",
+              "value": "={{ $env.UAZAPI_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "={{ $('Merge').first().json.phone }}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.output }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        4016,
+        -288
+      ],
+      "id": "7907a6c2-3179-4315-87e0-e7ec2c17a42f",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Merge').first().json.id }}",
+        "contextWindowLength": 20
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.4,
+      "position": [
+        3136,
+        0
+      ],
+      "id": "9ec7f463-81f5-40cd-84e6-1e28803a0591",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e64f10a8-86f2-4e8c-b3f3-a21c007a2d27",
+              "name": "output",
+              "value": "={{ $json.output.split('\\n\\n') }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3344,
+        -224
+      ],
+      "id": "c0acc59e-083e-4050-b24e-3f0daf42d5c5",
+      "name": "Format output"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "output",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        3568,
+        -224
+      ],
+      "id": "5322bf74-2314-4b02-9927-b1de67738fc1",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        3792,
+        -224
+      ],
+      "id": "b6ee4097-41f3-4809-9633-6a07c33eb80d",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        4240,
+        -224
+      ],
+      "id": "1ba759f7-749b-4827-91dc-005e9d39c86c",
+      "name": "Wait"
+    },
+    {
+      "parameters": {
+        "tableId": "debounce",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "user_id",
+              "fieldValue": "={{ $('Merge').item.json.id }}"
+            },
+            {
+              "fieldId": "menssage_id",
+              "fieldValue": "={{ $('Infor_importantes').item.json.mensagem_id }}"
+            },
+            {
+              "fieldId": "content",
+              "fieldValue": "={{ $json.mensagem }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1648,
+        -224
+      ],
+      "id": "a060c346-d4d3-42b7-9a69-8ff052f45c29",
+      "name": "Create a row1",
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1872,
+        -224
+      ],
+      "id": "9725ca6e-bd98-4e8b-9c8d-c104d692306e",
+      "name": "Wait1"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "debounce",
+        "returnAll": true,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "condition": "eq",
+              "keyValue": "={{ $json.user_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2096,
+        -224
+      ],
+      "id": "07a760cc-e35b-4a0b-a6a8-6596385afdc9",
+      "name": "Get many rows",
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ca206a7d-18eb-4e85-951e-0e9cd7af7cc6",
+              "leftValue": "={{ $json.menssage_id.last() }}",
+              "rightValue": "={{ $('Infor_importantes').item.json.mensagem_id }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2544,
+        -224
+      ],
+      "id": "9c332d6f-7795-4321-ae49-480ef928a6ad",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "menssage_id"
+            },
+            {
+              "fieldToAggregate": "content"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        2320,
+        -224
+      ],
+      "id": "c4d5418a-e6ea-4260-b6a9-b60244a77b21",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "tableId": "debounce",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Merge').first().json.id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2768,
+        -224
+      ],
+      "id": "6f716b22-199b-47ad-bffb-f7f36fd57112",
+      "name": "Delete a row",
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Infor_importantes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Infor_importantes": {
+      "main": [
+        [
+          {
+            "node": "Usuário existe?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Usuário existe?": {
+      "main": [
+        [
+          {
+            "node": "Usuário Existe?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Usuário Existe?": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a row": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Baixa o audio",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Baixa a imagem",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe a recording": {
+      "main": [
+        [
+          {
+            "node": "Audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Baixa o audio": {
+      "main": [
+        [
+          {
+            "node": "Get URL pública do audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Baixa a imagem": {
+      "main": [
+        [
+          {
+            "node": "Get URL pública da imagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get URL pública do audio": {
+      "main": [
+        [
+          {
+            "node": "Transcribe a recording",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get URL pública da imagem": {
+      "main": [
+        [
+          {
+            "node": "Analyze image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze image": {
+      "main": [
+        [
+          {
+            "node": "imagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Audio": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "imagem": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Create a row1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Format output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format output": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a row1": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Get many rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many rows": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Delete a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete a row": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "nodeGroups": [],
+  "tags": []
+}
